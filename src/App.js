@@ -1,70 +1,86 @@
-import style from "./style.module.css";
+import styles from "./app.module.css";
+import data from "./data.json";
 import { useState } from "react";
 
 export const App = () => {
-	const [value, setValue] = useState("");
-	const [list, setList] = useState([]);
-	const [error, setError] = useState("");
-	const [isValueValid, setIsValueValid] = useState(false);
-	const onInputButtonClick = () => {
-		let promptValue = prompt("Введите новое значение:");
-		if (promptValue.length < 3) {
-			setIsValueValid(false);
-			setError("Введенное значение должно содержать минимум 3 символа");
-		} else {
-			setIsValueValid(true);
-			setValue(promptValue);
-			setError("");
-		}
+	// Можно задать 2 состояния — steps и activeIndex
+	const [steps, setSteps] = useState(data);
+	const [activeIndex, setActiveIndex] = useState(0);
+
+	// И определить 3 обработчика: Клик назад, Клик вперед, Начать сначала
+	const clickNext = () => {
+		activeIndex === 6 ? setActiveIndex(0) : setActiveIndex(activeIndex + 1);
 	};
-	const onAddButtonClick = () => {
-		let currentId = Date.now();
-		let updateList = [...list, { id: currentId, value: value }];
-		setList(updateList);
-		console.log(list);
-		setError("");
-		setValue("");
-		setIsValueValid(false);
+	const clickPreview = () => {
+		console.log(activeIndex);
+		setActiveIndex(activeIndex - 1);
 	};
+
+	const buttonClick = (event) => {
+		setActiveIndex(event.target.innerText - 1);
+	};
+	// И 2 переменных-флага — находимся ли мы на первом шаге, и находимся ли на последнем
+	let isFirst = true;
+	let isEnd = false;
+	if (activeIndex !== 0) {
+		isFirst = false;
+	}
+	if (activeIndex === 6) {
+		isEnd = true;
+	}
 
 	return (
-		<div className={style.app}>
-			<h1 className={style["page-heading"]}>Ввод значения</h1>
-			<p className={style["no-margin-text"]}>
-				Текущее значение <code>value</code>: "
-				<output className={style["current-value"]}>{value}</output>"
-			</p>
-			{error !== "" ? <div className={style.error}>{error}</div> : null}
-
-			<div className={style["buttons-container"]}>
-				<button className={style.button} onClick={onInputButtonClick}>
-					Ввести новое
-				</button>
-				<button
-					className={style.button}
-					onClick={onAddButtonClick}
-					disabled={!isValueValid}
-				>
-					Добавить в список
-				</button>
-			</div>
-			<div className={style["list-container"]}>
-				<h2 className={style["list-heading"]}>Список:</h2>
-				{list.length === 0 ? (
-					<p className={style["no-margin-text"]}>
-						Нет добавленных элементов
-					</p>
-				) : null}
-
-				<ul className={style.list}>
-					{list.map((item) => {
-						return (
-							<li className={style["list-item"]} key={item.id}>
-								{item.value}
-							</li>
-						);
-					})}
-				</ul>
+		<div className={styles.container}>
+			<div className={styles.card}>
+				<h1>Инструкция по готовке пельменей</h1>
+				<div className={styles.steps}>
+					<div className={styles["steps-content"]}>
+						{data[activeIndex].content}
+					</div>
+					<ul className={styles["steps-list"]}>
+						{steps.map((item, index) => {
+							return (
+								<li
+									className={
+										index === activeIndex
+											? styles["steps-item"] +
+											  " " +
+											  styles.done +
+											  " " +
+											  styles.active
+											: index < activeIndex
+											? styles["steps-item"] +
+											  " " +
+											  styles.done
+											: styles["steps-item"]
+									}
+								>
+									<button
+										className={styles["steps-item-button"]}
+										onClick={buttonClick}
+									>
+										{index + 1}
+									</button>
+									Шаг {index + 1}
+								</li>
+							);
+						})}
+					</ul>
+					<div className={styles["buttons-container"]}>
+						<button
+							className={styles.button}
+							onClick={clickPreview}
+							disabled={isFirst}
+						>
+							Назад
+						</button>
+						<button className={styles.button} onClick={clickNext}>
+							{isEnd ? "Начать сначала" : "Далее"}
+							{/* "Начать сначала", можно сделать этой же кнопкой, просто подменять обработчик и текст в зависимости от условия */}
+							{/* Или заменять всю кнопку в зависимости от условия */}
+						</button>
+					</div>
+				</div>
 			</div>
 		</div>
 	);
