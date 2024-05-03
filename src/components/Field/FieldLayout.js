@@ -10,7 +10,9 @@ export const FieldLayout = ({ numberField, buttonClick }) => {
 						className={styles.item}
 						id={index}
 						key={index}
-						onClick={buttonClick}
+						onClick={() => {
+							buttonClick(index);
+						}}
 					>
 						{item}
 					</button>
