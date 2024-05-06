@@ -1,83 +1,156 @@
-import { useState } from "react";
-import { AppLayout } from "./AppLayout.js";
-let POS_X = [];
-let POS_0 = [];
+import { useRef } from "react";
+import { useStore } from "./useStore.js";
+import styles from "./app.module.css";
 
-const win = (WIN_PATTERNS, currentPlayer) => {
-	return WIN_PATTERNS.every((el) => {
-		return currentPlayer.includes(el);
-	});
+const sendFormData = (formData) => {
+	console.log(formData);
 };
 
 export const App = () => {
-	const [currentPlayer, setCurrentPlayer] = useState("x");
-	const [isGameEnded, setIsGameEnded] = useState(false);
-	const [isDraw, setIsDraw] = useState(false);
-	const [field, setField] = useState(["", "", "", "", "", "", "", "", ""]);
-	//WIN_PATTERNS - задаём выигрышные варианты одной из сторон
-	const WIN_PATTERNS = [
-		[0, 1, 2],
-		[3, 4, 5],
-		[6, 7, 8],
-		[0, 3, 6],
-		[1, 4, 7],
-		[2, 5, 8],
-		[0, 4, 8],
-		[2, 4, 6],
-	];
-	const onStart = () => {
-		setField(["", "", "", "", "", "", "", "", ""]);
-		setIsGameEnded(false);
-		setIsDraw(false);
-		POS_X = []; //Помещаем в массив ходы игрока Х
-		POS_0 = []; //Помещаем в массив ходы игрока 0
-	};
-	const buttonClick = (index) => {
-		if (isGameEnded) {
-			alert("Игра завершена. Начните игру сначала");
-			return;
-		}
+	const {
+		getState,
+		getStateErrors,
+		updateStateErrors,
+		updateState,
+		resetState,
+	} = useStore();
 
-		let currentField = [...field];
-		if (currentField[index] === "") {
-			currentPlayer === "x" ? POS_X.push(index) : POS_0.push(index);
-			if (POS_X.length + POS_0.length === 9) {
-				setIsDraw(true);
-			}
-			currentPlayer === "x"
-				? setCurrentPlayer("0")
-				: setCurrentPlayer("x");
-			currentField[index] = currentPlayer;
-			setField(currentField);
+	//const [loginError, setLoginError] = useState(true);
+
+	const submitButtonRef = useRef(null);
+
+	const onSubmit = (event) => {
+		event.preventDefault();
+		if (email && password && password === passwordIsTrue) {
+			console.log("Пароли совпадают");
+			sendFormData(getState());
 		} else {
-			alert("Выберите пустую клетку");
+			alert("Пароли не совпадают");
 		}
-		// Проверка на достижение победного результата
-		for (let i = 0; i < WIN_PATTERNS.length; i++) {
-			if (win(WIN_PATTERNS[i], POS_X)) {
-				setCurrentPlayer("x");
+	};
 
-				POS_X = [];
-				setIsGameEnded(true);
+	const { email, password, passwordIsTrue } = getState();
+	const { emailError, passwordError, passwordIsTrueError } = getStateErrors();
+
+	const onFormChange = ({ target }) => {
+		setTimeout(() => {
+			if (
+				email &&
+				target.name === "passwordIsTrue" &&
+				emailError === null
+			) {
+				if (target.value === password) {
+					submitButtonRef.current.focus();
+				}
 			}
+		}, 100);
+	};
 
-			if (win(WIN_PATTERNS[i], POS_0)) {
-				setCurrentPlayer("0");
+	const onChange = ({ target }) => {
+		let newErrorEmail = null;
+		let newErrorPassword = null;
+		let newErrorPasswordIsTrue = null;
 
-				POS_0 = [];
-				setIsGameEnded(true);
+		if (target.name === "password") {
+			if (!/^[\w@_]*$/.test(target.value)) {
+				newErrorPassword =
+					"Допустимые символы: буквы, цифры и нижнее подчеркивание";
+			} else if (target.value.length > 20) {
+				newErrorPassword = "Должно быть не больше 20 символов";
+			} else if (target.value.length < 3) {
+				newErrorPassword = "Должно быть не меньше 3 символов";
 			}
+			updateStateErrors("passwordError", newErrorPassword);
 		}
+		if (target.name === "passwordIsTrue") {
+			if (!/^[\w@_]*$/.test(target.value)) {
+				newErrorPasswordIsTrue =
+					"Допустимые символы: буквы, цифры и нижнее подчеркивание";
+			} else if (target.value.length > 20) {
+				newErrorPasswordIsTrue = "Должно быть не больше 20 символов";
+			} else if (target.value.length < 3) {
+				newErrorPasswordIsTrue = "Должно быть не меньше 3 символов";
+			}
+			updateStateErrors("passwordIsTrueError", newErrorPasswordIsTrue);
+		}
+
+		if (target.name === "email") {
+			if (!/^[\w@_]*$/.test(target.value)) {
+				newErrorEmail =
+					"Допустимые символы: буквы, цифры и нижнее подчеркивание";
+			} else if (target.value.length > 20) {
+				newErrorEmail = "Должно быть не больше 20 символов";
+			} else if (target.value.length < 3) {
+				newErrorEmail = "Должно быть не меньше 3 символов";
+			}
+			if (!target.value.includes("@")) {
+				newErrorEmail = "Email должен содержать символ @";
+			}
+			updateStateErrors("emailError", newErrorEmail);
+		}
+		updateState(target.name, target.value);
+
+		console.log(getState());
+		console.log(getStateErrors());
 	};
 
 	return (
-		<AppLayout
-			field={field}
-			currentPlayer={currentPlayer}
-			isGameEnded={isGameEnded}
-			isDraw={isDraw}
-			buttonClick={buttonClick}
-			onStart={onStart}
-		/>
+		<div className={styles.container}>
+			<form
+				onSubmit={onSubmit}
+				onChange={onFormChange}
+				className={styles.app}
+			>
+				{emailError !== null && (
+					<div className={styles.errorMessage}>{emailError}</div>
+				)}
+				{passwordError !== null && (
+					<div className={styles.errorMessage}>{passwordError}</div>
+				)}
+				{passwordIsTrueError !== null && (
+					<div className={styles.errorMessage}>
+						{passwordIsTrueError}
+					</div>
+				)}
+
+				<input
+					name="email"
+					type="email"
+					value={email}
+					onChange={onChange}
+					placeholder="Почта"
+				/>
+				<input
+					name="password"
+					type="password"
+					value={password}
+					onChange={onChange}
+					placeholder="Пароль"
+				/>
+				<input
+					name="passwordIsTrue"
+					type="password"
+					value={passwordIsTrue}
+					onChange={onChange}
+					placeholder="Подтверждение пароля"
+				/>
+				<div className="buttonGroup">
+					<button type="button" onClick={resetState}>
+						Сброс
+					</button>
+					<button
+						type="submit"
+						ref={submitButtonRef}
+						disabled={
+							emailError !== null ||
+							passwordError !== null ||
+							passwordIsTrueError !== null
+						}
+					>
+						Зарегестрироваться
+					</button>
+				</div>
+			</form>
+		</div>
 	);
 };
