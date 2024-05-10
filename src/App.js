@@ -1,104 +1,84 @@
 import { useRef } from "react";
-import { useStore } from "./useStore.js";
+
 import styles from "./app.module.css";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useForm } from "react-hook-form";
+const fieldScheme = yup.object().shape({
+	email: yup
+		.string()
+		.matches(
+			/^[\w@_.]*$/,
+			"Допустимые символы: буквы, цифры и нижнее подчеркивание"
+		)
+		.matches(/^\w+@\w+\.\w+$/, "Формат email: Text@Text.Text")
+		.max(20, "Email-должно быть не больше 20 символов")
+		.min(5, "Email - должно быть не меньше 5 символов"),
+	password: yup
+		.string()
+		.matches(
+			/^[\w_]*$/,
+			"Пароль - допустимые символы: буквы, цифры и нижнее подчеркивание"
+		)
+		.max(20, "Пароль - должно быть не больше 20 символов")
+		.min(3, "Пароль - должно быть не меньше 3 символов"),
+	passwordIsTrue: yup
+		.string()
+		.matches(
+			/^[\w_]*$/,
+			"Подтверждение пароля - Допустимые символы: буквы, цифры и нижнее подчеркивание"
+		)
+		.max(20, "Подтверждение пароля - должно быть не больше 20 символов")
+		.min(3, "Подтверждение пароля - должно быть не меньше 3 символов"),
+});
 
 const sendFormData = (formData) => {
 	console.log(formData);
 };
 
 export const App = () => {
-	const {
-		getState,
-		getStateErrors,
-		updateStateErrors,
-		updateState,
-		resetState,
-	} = useStore();
-
-	//const [loginError, setLoginError] = useState(true);
-
 	const submitButtonRef = useRef(null);
 
-	const onSubmit = (event) => {
-		event.preventDefault();
-		if (email && password && password === passwordIsTrue) {
-			console.log("Пароли совпадают");
-			sendFormData(getState());
+	const onSubmit = ({ email, password, passwordIsTrue }) => {
+		if (password === passwordIsTrue) {
+			sendFormData({ email, password, passwordIsTrue });
+			console.log(email);
 		} else {
 			alert("Пароли не совпадают");
 		}
 	};
 
-	const { email, password, passwordIsTrue } = getState();
-	const { emailError, passwordError, passwordIsTrueError } = getStateErrors();
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+	} = useForm({
+		defaultValues: { email: "", password: "", passwordIsTrue: "" },
+		resolver: yupResolver(fieldScheme),
+	});
 
-	const onFormChange = ({ target }) => {
+	let passwordError = errors.password?.message;
+	let passwordIsTrueError = errors.passwordIsTrue?.message;
+	let emailError = errors.email?.message;
+
+	const onFormChange = ({ email, password, passwordIsTrue }) => {
 		setTimeout(() => {
-			if (
-				email &&
-				target.name === "passwordIsTrue" &&
-				emailError === null
-			) {
-				if (target.value === password) {
-					submitButtonRef.current.focus();
-				}
+			if (passwordIsTrue === password) {
+				submitButtonRef.current.focus();
 			}
 		}, 100);
 	};
 
-	const onChange = ({ target }) => {
-		let newErrorEmail = null;
-		let newErrorPassword = null;
-		let newErrorPasswordIsTrue = null;
-
-		if (target.name === "password") {
-			if (!/^[\w@_]*$/.test(target.value)) {
-				newErrorPassword =
-					"Допустимые символы: буквы, цифры и нижнее подчеркивание";
-			} else if (target.value.length > 20) {
-				newErrorPassword = "Должно быть не больше 20 символов";
-			} else if (target.value.length < 3) {
-				newErrorPassword = "Должно быть не меньше 3 символов";
-			}
-			updateStateErrors("passwordError", newErrorPassword);
-		}
-		if (target.name === "passwordIsTrue") {
-			if (!/^[\w@_]*$/.test(target.value)) {
-				newErrorPasswordIsTrue =
-					"Допустимые символы: буквы, цифры и нижнее подчеркивание";
-			} else if (target.value.length > 20) {
-				newErrorPasswordIsTrue = "Должно быть не больше 20 символов";
-			} else if (target.value.length < 3) {
-				newErrorPasswordIsTrue = "Должно быть не меньше 3 символов";
-			}
-			updateStateErrors("passwordIsTrueError", newErrorPasswordIsTrue);
-		}
-
-		if (target.name === "email") {
-			if (!/^[\w@_]*$/.test(target.value)) {
-				newErrorEmail =
-					"Допустимые символы: буквы, цифры и нижнее подчеркивание";
-			} else if (target.value.length > 20) {
-				newErrorEmail = "Должно быть не больше 20 символов";
-			} else if (target.value.length < 3) {
-				newErrorEmail = "Должно быть не меньше 3 символов";
-			}
-			if (!target.value.includes("@")) {
-				newErrorEmail = "Email должен содержать символ @";
-			}
-			updateStateErrors("emailError", newErrorEmail);
-		}
-		updateState(target.name, target.value);
-
-		console.log(getState());
-		console.log(getStateErrors());
+	const resetState = ({ email, password, passwordIsTrue }) => {
+		console.log("reload");
+		window.location.reload();
 	};
 
 	return (
 		<div className={styles.container}>
 			<form
-				onSubmit={onSubmit}
-				onChange={onFormChange}
+				onSubmit={handleSubmit(onSubmit)}
+				onChange={handleSubmit(onFormChange)}
 				className={styles.app}
 			>
 				{emailError !== null && (
@@ -116,23 +96,20 @@ export const App = () => {
 				<input
 					name="email"
 					type="email"
-					value={email}
-					onChange={onChange}
+					{...register("email")}
 					placeholder="Почта"
 				/>
 				<input
 					name="password"
 					type="password"
-					value={password}
-					onChange={onChange}
 					placeholder="Пароль"
+					{...register("password")}
 				/>
 				<input
 					name="passwordIsTrue"
 					type="password"
-					value={passwordIsTrue}
-					onChange={onChange}
 					placeholder="Подтверждение пароля"
+					{...register("passwordIsTrue")}
 				/>
 				<div className="buttonGroup">
 					<button type="button" onClick={resetState}>
@@ -142,9 +119,9 @@ export const App = () => {
 						type="submit"
 						ref={submitButtonRef}
 						disabled={
-							emailError !== null ||
-							passwordError !== null ||
-							passwordIsTrueError !== null
+							!!emailError ||
+							!!passwordError ||
+							!!passwordIsTrueError
 						}
 					>
 						Зарегестрироваться
