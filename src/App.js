@@ -11,7 +11,7 @@ const fieldScheme = yup.object().shape({
 			/^[\w@_.]*$/,
 			"Допустимые символы: буквы, цифры и нижнее подчеркивание"
 		)
-		.matches(/^\w+@\w+\.\w+$/, "Формат email: Text@Text.Text")
+		.email("Введите корректный email")
 		.max(20, "Email-должно быть не больше 20 символов")
 		.min(5, "Email - должно быть не меньше 5 символов"),
 	password: yup
@@ -38,11 +38,13 @@ const sendFormData = (formData) => {
 
 export const App = () => {
 	const submitButtonRef = useRef(null);
+	const emailRef = useRef("");
+	const passwordRef = useRef("");
+	const passwordIsTrueRef = useRef("");
 
 	const onSubmit = ({ email, password, passwordIsTrue }) => {
 		if (password === passwordIsTrue) {
 			sendFormData({ email, password, passwordIsTrue });
-			console.log(email);
 		} else {
 			alert("Пароли не совпадают");
 		}
@@ -55,19 +57,21 @@ export const App = () => {
 	} = useForm({
 		defaultValues: { email: "", password: "", passwordIsTrue: "" },
 		resolver: yupResolver(fieldScheme),
+		mode: "onChange",
 	});
 
 	let passwordError = errors.password?.message;
 	let passwordIsTrueError = errors.passwordIsTrue?.message;
 	let emailError = errors.email?.message;
 
-	const onFormChange = ({ email, password, passwordIsTrue }) => {
+	/*const onChangeForm = ({ email, password, passwordIsTrue }) => {
 		setTimeout(() => {
 			if (passwordIsTrue === password) {
+				console.log("Click");
 				submitButtonRef.current.focus();
 			}
 		}, 100);
-	};
+	}; */
 
 	const resetState = ({ email, password, passwordIsTrue }) => {
 		console.log("reload");
@@ -76,11 +80,7 @@ export const App = () => {
 
 	return (
 		<div className={styles.container}>
-			<form
-				onSubmit={handleSubmit(onSubmit)}
-				onChange={handleSubmit(onFormChange)}
-				className={styles.app}
-			>
+			<form onSubmit={handleSubmit(onSubmit)} className={styles.app}>
 				{emailError !== null && (
 					<div className={styles.errorMessage}>{emailError}</div>
 				)}
@@ -96,20 +96,60 @@ export const App = () => {
 				<input
 					name="email"
 					type="email"
-					{...register("email")}
+					ref={emailRef}
+					{...register("email", {
+						onChange: (e) => {
+							emailRef.current = e.target.value;
+							setTimeout(() => {
+								if (
+									passwordIsTrueRef.current ===
+										passwordRef.current &&
+									passwordRef.current !== ""
+								) {
+									submitButtonRef.current.focus();
+								}
+							}, 100);
+						},
+					})}
 					placeholder="Почта"
 				/>
 				<input
 					name="password"
 					type="password"
+					ref={passwordRef}
 					placeholder="Пароль"
-					{...register("password")}
+					{...register("password", {
+						onChange: (e) => {
+							passwordRef.current = e.target.value;
+							setTimeout(() => {
+								if (
+									passwordIsTrueRef.current ===
+									passwordRef.current
+								) {
+									submitButtonRef.current.focus();
+								}
+							}, 100);
+						},
+					})}
 				/>
 				<input
 					name="passwordIsTrue"
 					type="password"
+					ref={passwordIsTrueRef}
 					placeholder="Подтверждение пароля"
-					{...register("passwordIsTrue")}
+					{...register("passwordIsTrue", {
+						onChange: (e) => {
+							passwordIsTrueRef.current = e.target.value;
+							setTimeout(() => {
+								if (
+									passwordIsTrueRef.current ===
+									passwordRef.current
+								) {
+									submitButtonRef.current.focus();
+								}
+							}, 100);
+						},
+					})}
 				/>
 				<div className="buttonGroup">
 					<button type="button" onClick={resetState}>
