@@ -27,7 +27,7 @@ let datetime =
 	currentdate.getSeconds();
 
 export const App = () => {
-	const [dir, setDir] = useState(false);
+	/*const [dir, setDir] = useState(false); */
 	const [titles, setTitles] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
@@ -38,15 +38,15 @@ export const App = () => {
 		setRefreshProductsFlag(!refreshProductsFlag);
 		console.log(refreshProductsFlag);
 	};
-	const refreshDir = () => {
+	/*const refreshDir = () => {
 		setDir(!dir);
-	};
+	}; */
 	const inputChange = ({ target }) => {
 		target.value === "" ? setFormActive(true) : setFormActive(false);
 		setCaseValue(target.value);
 	};
 
-	function getSortPosts(dir) {
+	function getSortPosts(dir = true) {
 		return titlesCopy.sort(function (titleA, titleB) {
 			if (
 				!dir === false
@@ -58,9 +58,9 @@ export const App = () => {
 	}
 
 	const clickSort = () => {
-		setTitles(getSortPosts(dir));
+		setTitles(getSortPosts());
 
-		refreshDir();
+		/*refreshDir(); */
 	};
 
 	useEffect(() => {
@@ -74,21 +74,13 @@ export const App = () => {
 		}
 	}, [debounceSearchValue]);
 
-	/*const inputSearch = ({ target }) => {
-		let currentArr = titlesCopy.filter(
-			(title) => title.title.indexOf(target.value) > -1
-		);
-		setTitles(currentArr);
-		setSearchValue(target.value);
-	}; */
-
 	useEffect(() => {
 		setIsLoading(true);
-		fetch("https://jsonplaceholder.typicode.com/todos/")
+		fetch("http://localhost:3005/posts")
 			.then((response) => response.json())
 			.then((json) => {
 				setTitles(json);
-				titlesCopy = json;
+				titlesCopy = [...json];
 			})
 			.finally(() => {
 				setIsLoading(false);
