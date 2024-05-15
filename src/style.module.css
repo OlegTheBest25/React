@@ -1,30 +1,23 @@
-.container {
-	margin-left: auto;
-	margin-right: auto;
-	margin-top: 20px;
-	width: 200px;
-	padding: 15px;
-	border: 1px solid black;
-	border-radius: 10px;
-	background-color: aquamarine;
+body {
+	padding-top: 25px;
 }
 
-button {
-	background-color: rgb(39, 37, 37);
-	margin: 5px;
-	padding: 9px;
-	color: white;
-}
-input {
-	display: block;
-	margin: auto;
-	height: 25px;
-}
-
-.result {
+.item {
+	text-align: center;
 	color: blue;
 }
 
-.baseStyle {
-	color: rgb(13, 13, 13);
+.flexTitle {
+	display: flex;
+	justify-content: space-between;
+}
+.inputSearch {
+	margin: 10px;
+	width: 25%;
+}
+
+.buttonSort {
+	margin: 10px;
+	border-radius: 5px;
+	border: 0.5px solid grey;
 }
