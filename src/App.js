@@ -84,7 +84,7 @@ export const App = () => {
 
 	useEffect(() => {
 		setIsLoading(true);
-		fetch("http://localhost:3005/posts")
+		fetch("https://jsonplaceholder.typicode.com/todos/")
 			.then((response) => response.json())
 			.then((json) => {
 				setTitles(json);
