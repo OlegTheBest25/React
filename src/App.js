@@ -1,17 +1,23 @@
 import { useState, useEffect } from "react";
 import styles from "./style.module.css";
 import { List } from "./components/list/list";
+import { Post } from "./components/post/post";
 import { Form } from "./components/form/form";
 import { Spinner } from "./components/spinner/spinner";
+import { Routes, Route, Navigate } from "react-router-dom";
+
 import {
 	useOnChangeTitle,
 	useOnDeleteTitle,
 	useOnCreateTitle,
 	useDebounce,
+	useGetPosts,
 } from "./hooks";
 
 let currentdate = new Date();
-let titlesCopy = [];
+
+const NotFound = () => <div>Такая страница не существует</div>;
+
 let datetime =
 	"Данные изменены: " +
 	currentdate.getDate() +
@@ -27,12 +33,9 @@ let datetime =
 	currentdate.getSeconds();
 
 export const App = () => {
-	/*const [dir, setDir] = useState(false); */
-	const [titles, setTitles] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
 	const debounceSearchValue = useDebounce(searchValue, 1000);
-
 	const [refreshProductsFlag, setRefreshProductsFlag] = useState(false);
 	const refreshProduct = () => {
 		setRefreshProductsFlag(!refreshProductsFlag);
@@ -74,7 +77,7 @@ export const App = () => {
 		}
 	}, [debounceSearchValue]);
 
-	useEffect(() => {
+	/*useEffect(() => {
 		setIsLoading(true);
 		fetch("http://localhost:3005/posts")
 			.then((response) => response.json())
@@ -85,46 +88,67 @@ export const App = () => {
 			.finally(() => {
 				setIsLoading(false);
 			});
-	}, [refreshProductsFlag]);
+	}, [refreshProductsFlag]);*/
 
 	const onChangeTitle = useOnChangeTitle(datetime, refreshProduct);
 	const onDeleteTitle = useOnDeleteTitle(refreshProduct);
+	const { titles, setTitles, titlesCopy } = useGetPosts(
+		setIsLoading,
+		refreshProductsFlag
+	);
 	const { createItem, formActive, caseValue, setCaseValue, setFormActive } =
 		useOnCreateTitle(refreshProduct);
 
 	return (
 		<div className="container mb-5">
-			<div className={styles.flexTitle}>
-				<button
-					className={("btn btn-secondary", styles.buttonSort)}
-					onClick={clickSort}
-				>
-					Сортировка
-				</button>
-				<input
-					className={styles.inputSearch}
-					placeholder="Введите данные для поиска"
-					value={searchValue}
-					onChange={(e) => setSearchValue(e.target.value)}
-				/>
-			</div>
+			<Routes>
+				<Route
+					path="/"
+					element={
+						<>
+							<div className={styles.flexTitle}>
+								<button
+									className={
+										("btn btn-secondary", styles.buttonSort)
+									}
+									onClick={clickSort}
+								>
+									Сортировка
+								</button>
+								<input
+									className={styles.inputSearch}
+									placeholder="Введите данные для поиска"
+									value={searchValue}
+									onChange={(e) =>
+										setSearchValue(e.target.value)
+									}
+								/>
+							</div>
 
-			<Form
-				value={caseValue}
-				inputChange={inputChange}
-				createItem={createItem}
-				formActive={formActive}
-			/>
+							<Form
+								value={caseValue}
+								inputChange={inputChange}
+								createItem={createItem}
+								formActive={formActive}
+							/>
 
-			{isLoading ? (
-				<Spinner />
-			) : (
-				<List
-					titles={titles}
-					onChangeTitle={onChangeTitle}
-					onDeleteTitle={onDeleteTitle}
-				/>
-			)}
+							{isLoading ? <Spinner /> : <List titles={titles} />}
+						</>
+					}
+				></Route>
+				<Route
+					path="product/:id"
+					element={
+						<Post
+							titles={titles}
+							onChangeTitle={onChangeTitle}
+							onDeleteTitle={onDeleteTitle}
+						/>
+					}
+				></Route>
+				<Route path="/404" element={<NotFound />}></Route>
+				<Route path="*" element={<Navigate to="/404" />}></Route>
+			</Routes>
 		</div>
 	);
 };

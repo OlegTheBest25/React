@@ -5,8 +5,11 @@
 	overflow: hidden; /* Обрезаем всё за пределами блока */
 	text-overflow: ellipsis; /* Добавляем многоточие */
 }
-li {
-	margin: 5px;
+.wrapper {
 	border: 1px solid black;
+	padding: 5px;
+	margin: 10px auto;
 	border-radius: 10px;
+	background-color: beige;
+	text-align: center;
 }
