@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import styles from "./style.module.css";
-import { List } from "./components/list/list";
 import { Post } from "./components/post/post";
-import { Form } from "./components/form/form";
-import { Spinner } from "./components/spinner/spinner";
+
 import { Routes, Route, Navigate } from "react-router-dom";
+import { Main } from "./components/main/main";
 
 import {
 	useOnChangeTitle,
@@ -41,9 +40,7 @@ export const App = () => {
 		setRefreshProductsFlag(!refreshProductsFlag);
 		console.log(refreshProductsFlag);
 	};
-	/*const refreshDir = () => {
-		setDir(!dir);
-	}; */
+
 	const inputChange = ({ target }) => {
 		target.value === "" ? setFormActive(true) : setFormActive(false);
 		setCaseValue(target.value);
@@ -62,8 +59,6 @@ export const App = () => {
 
 	const clickSort = () => {
 		setTitles(getSortPosts());
-
-		/*refreshDir(); */
 	};
 
 	useEffect(() => {
@@ -77,19 +72,6 @@ export const App = () => {
 		}
 	}, [debounceSearchValue]);
 
-	/*useEffect(() => {
-		setIsLoading(true);
-		fetch("http://localhost:3005/posts")
-			.then((response) => response.json())
-			.then((json) => {
-				setTitles(json);
-				titlesCopy = [...json];
-			})
-			.finally(() => {
-				setIsLoading(false);
-			});
-	}, [refreshProductsFlag]);*/
-
 	const onChangeTitle = useOnChangeTitle(datetime, refreshProduct);
 	const onDeleteTitle = useOnDeleteTitle(refreshProduct);
 	const { titles, setTitles, titlesCopy } = useGetPosts(
@@ -98,42 +80,24 @@ export const App = () => {
 	);
 	const { createItem, formActive, caseValue, setCaseValue, setFormActive } =
 		useOnCreateTitle(refreshProduct);
-
+	console.log(titles);
 	return (
 		<div className="container mb-5">
 			<Routes>
 				<Route
 					path="/"
 					element={
-						<>
-							<div className={styles.flexTitle}>
-								<button
-									className={
-										("btn btn-secondary", styles.buttonSort)
-									}
-									onClick={clickSort}
-								>
-									Сортировка
-								</button>
-								<input
-									className={styles.inputSearch}
-									placeholder="Введите данные для поиска"
-									value={searchValue}
-									onChange={(e) =>
-										setSearchValue(e.target.value)
-									}
-								/>
-							</div>
-
-							<Form
-								value={caseValue}
-								inputChange={inputChange}
-								createItem={createItem}
-								formActive={formActive}
-							/>
-
-							{isLoading ? <Spinner /> : <List titles={titles} />}
-						</>
+						<Main
+							caseValue={caseValue}
+							clickSort={clickSort}
+							searchValue={searchValue}
+							setSearchValue={setSearchValue}
+							inputChange={inputChange}
+							createItem={createItem}
+							formActive={formActive}
+							isLoading={isLoading}
+							titles={titles}
+						/>
 					}
 				></Route>
 				<Route

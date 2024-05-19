@@ -1,0 +1,23 @@
+body {
+	padding-top: 25px;
+}
+
+.item {
+	text-align: center;
+	color: blue;
+}
+
+.flexTitle {
+	display: flex;
+	justify-content: space-between;
+}
+.inputSearch {
+	margin: 10px;
+	width: 25%;
+}
+
+.buttonSort {
+	margin: 10px;
+	border-radius: 5px;
+	border: 0.5px solid grey;
+}
