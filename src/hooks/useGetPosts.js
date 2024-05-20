@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 let titlesCopy = [];
-export const useGetPosts = (setIsLoading, refreshProductsFlag) => {
+export const useGetPosts = () => {
 	const [titles, setTitles] = useState([]);
+	const [isLoading, setIsLoading] = useState(false);
+	const [refreshProductsFlag, setRefreshProductsFlag] = useState(false);
+	const refreshProduct = () => {
+		setRefreshProductsFlag(!refreshProductsFlag);
+	};
 
 	useEffect(() => {
 		setIsLoading(true);
@@ -15,5 +20,5 @@ export const useGetPosts = (setIsLoading, refreshProductsFlag) => {
 				setIsLoading(false);
 			});
 	}, [refreshProductsFlag]);
-	return { titles, setTitles, titlesCopy };
+	return { titles, setTitles, titlesCopy, refreshProduct, isLoading };
 };

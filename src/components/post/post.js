@@ -1,7 +1,12 @@
 import styles from "./post.module.css";
 import { useParams, useNavigate } from "react-router-dom";
+import { useOnChangeTitle, useOnDeleteTitle, useGetPosts } from "../../hooks";
 
-export const Post = ({ titles, onChangeTitle, onDeleteTitle }) => {
+export const Post = () => {
+	const { titles, refreshProduct } = useGetPosts();
+	const onChangeTitle = useOnChangeTitle(refreshProduct);
+	const onDeleteTitle = useOnDeleteTitle(refreshProduct);
+
 	const PostNotFound = () => <div>Пост не найден</div>;
 	const params = useParams();
 	const navigate = useNavigate();

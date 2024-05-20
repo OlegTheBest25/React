@@ -1,22 +1,13 @@
 import styles from "./main.module.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Form } from "../form/form.js";
 import { Spinner } from "../spinner/spinner.js";
 import { List } from "../list/list.js";
 import { useDebounce } from "../../hooks/useDebounce.js";
-export const Main = ({
-	searchValue,
-	setSearchValue,
-	titles,
-	isLoading,
-	setTitles,
-	titlesCopy,
-	setFormActive,
-	setCaseValue,
-	caseValue,
-	formActive,
-	createItem,
-}) => {
+import { useOnCreateTitle } from "../../hooks/useOnCreateTitle.js";
+import { useGetPosts } from "../../hooks/useGetPosts.js";
+export const Main = () => {
+	const [searchValue, setSearchValue] = useState("");
 	const debounceSearchValue = useDebounce(searchValue, 1000);
 	const inputChange = ({ target }) => {
 		target.value === "" ? setFormActive(true) : setFormActive(false);
@@ -46,7 +37,10 @@ export const Main = ({
 	const clickSort = () => {
 		setTitles(getSortPosts());
 	};
-
+	const { titles, setTitles, titlesCopy, isLoading, refreshProduct } =
+		useGetPosts();
+	const { createItem, formActive, caseValue, setCaseValue, setFormActive } =
+		useOnCreateTitle(refreshProduct);
 	return (
 		<div>
 			<div className={styles.flexTitle}>
