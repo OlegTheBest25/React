@@ -1,18 +1,4 @@
-export const useOnChangeTitle = (refreshProduct) => {
-	let currentdate = new Date();
-	let datetime =
-		"Данные изменены: " +
-		currentdate.getDate() +
-		"/" +
-		(currentdate.getMonth() + 1) +
-		"/" +
-		currentdate.getFullYear() +
-		" @ " +
-		currentdate.getHours() +
-		":" +
-		currentdate.getMinutes() +
-		":" +
-		currentdate.getSeconds();
+export const useOnChangeTitle = (datetime, refreshProduct) => {
 	const onChangeTitle = (id) => {
 		fetch(`http://localhost:3005/posts/${id}`, {
 			method: "PUT",

@@ -1,5 +1,5 @@
 import { Title } from "../item/item";
-
+import styles from "./list.module.css";
 export const List = ({ titles }) => {
 	return (
 		<ul>
