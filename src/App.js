@@ -1,125 +1,117 @@
-import { useState, useEffect } from "react";
-import styles from "./style.module.css";
-import { List } from "./components/list/list";
-import { Form } from "./components/form/form";
-import { AppContext } from "./context";
-import { Spinner } from "./components/spinner/spinner";
-import {
-	useOnChangeTitle,
-	useOnDeleteTitle,
-	useOnCreateTitle,
-	useDebounce,
-} from "./hooks";
+import { AppLayout } from "./AppLayout.js";
+import React from "react";
 
-let currentdate = new Date();
-let titlesCopy = [];
-let datetime =
-	"Данные изменены: " +
-	currentdate.getDate() +
-	"/" +
-	(currentdate.getMonth() + 1) +
-	"/" +
-	currentdate.getFullYear() +
-	" @ " +
-	currentdate.getHours() +
-	":" +
-	currentdate.getMinutes() +
-	":" +
-	currentdate.getSeconds();
+import { store } from "./store.js";
+import { useRef } from "react";
+
+let POS_X = [];
+let POS_0 = [];
+
+const win = (WIN_PATTERNS, currentPlayer) => {
+	return WIN_PATTERNS.every((el) => {
+		return currentPlayer.includes(el);
+	});
+};
 
 export const App = () => {
-	/*const [dir, setDir] = useState(false); */
-	const [titles, setTitles] = useState([]);
-	const [isLoading, setIsLoading] = useState(false);
-	const [searchValue, setSearchValue] = useState("");
-	const debounceSearchValue = useDebounce(searchValue, 1000);
-
-	const [refreshProductsFlag, setRefreshProductsFlag] = useState(false);
-	const refreshProduct = () => {
-		setRefreshProductsFlag(!refreshProductsFlag);
-		console.log(refreshProductsFlag);
+	const { currentPlayer, isDraw, isGameEnded, field, WIN_PATTERNS } =
+		store.getState();
+	const Appref = useRef(null);
+	const render = (currentPlayer, isDraw, isGameEnded, field) => {
+		return (
+			<AppLayout
+				field={buttonClick.field ? buttonClick.field : field}
+				currentPlayer={currentPlayer}
+				isGameEnded={isGameEnded}
+				isDraw={isDraw}
+				buttonClick={buttonClick}
+				onStart={onStart}
+			/>
+		);
 	};
-	/*const refreshDir = () => {
-		setDir(!dir);
-	}; */
-	const inputChange = ({ target }) => {
-		target.value === "" ? setFormActive(true) : setFormActive(false);
-		setCaseValue(target.value);
-	};
-
-	function getSortPosts(dir = true) {
-		return titlesCopy.sort(function (titleA, titleB) {
-			if (
-				!dir === false
-					? titleA.title < titleB.title
-					: titleA.title > titleB.title
-			)
-				return -1;
+	const onStart = () => {
+		store.dispatch({
+			type: "SET_FIELD",
+			payload: ["", "", "", "", "", "", "", "", ""],
 		});
-	}
-
-	const clickSort = () => {
-		setTitles(getSortPosts());
-
-		/*refreshDir(); */
+		store.dispatch({ type: "SET_IS_GAME_ENDED", payload: false });
+		store.dispatch({ type: "SET_IS_DRAW", payload: false });
+		POS_X = []; //Помещаем в массив ходы игрока Х
+		POS_0 = []; //Помещаем в массив ходы игрока 0
 	};
 
-	useEffect(() => {
-		if (debounceSearchValue) {
-			let currentArr = titlesCopy.filter(
-				(title) => title.title.indexOf(searchValue) > -1
-			);
-			setTitles(currentArr);
-		} else {
-			setTitles(titlesCopy);
+	const buttonClick = (index) => {
+		const { currentPlayer, isGameEnded, field } = store.getState();
+
+		if (isGameEnded) {
+			alert("Игра завершена. Начните игру сначала");
+			return;
 		}
-	}, [debounceSearchValue]);
 
-	useEffect(() => {
-		setIsLoading(true);
-		fetch("http://localhost:3005/posts")
-			.then((response) => response.json())
-			.then((json) => {
-				setTitles(json);
-				titlesCopy = [...json];
-			})
-			.finally(() => {
-				setIsLoading(false);
-			});
-	}, [refreshProductsFlag]);
+		let currentField = [...field];
+		if (currentField[index] === "") {
+			currentPlayer === "x" ? POS_X.push(index) : POS_0.push(index);
+			if (POS_X.length + POS_0.length === 9) {
+				store.dispatch({ type: "SET_IS_DRAW", payload: true });
+			}
+			currentPlayer === "x"
+				? store.dispatch({
+						type: "SET_CURRENT_PLAYER",
+						payload: "0",
+				  })
+				: store.dispatch({
+						type: "SET_CURRENT_PLAYER",
+						payload: "x",
+				  });
+			currentField[index] = currentPlayer;
+			store.dispatch({ type: "SET_FIELD", payload: currentField });
+		} else {
+			alert("Выберите пустую клетку");
+		}
+		// Проверка на достижение победного результата
+		for (let i = 0; i < WIN_PATTERNS.length; i++) {
+			if (win(WIN_PATTERNS[i], POS_X)) {
+				store.dispatch({
+					type: "SET_CURRENT_PLAYER",
+					payload: "x",
+				});
 
-	const onChangeTitle = useOnChangeTitle(datetime, refreshProduct);
-	const onDeleteTitle = useOnDeleteTitle(refreshProduct);
-	const { createItem, formActive, caseValue, setCaseValue, setFormActive } =
-		useOnCreateTitle(refreshProduct);
+				POS_X = [];
+				store.dispatch({
+					type: "SET_IS_GAME_ENDED",
+					payload: true,
+				});
+			}
+
+			if (win(WIN_PATTERNS[i], POS_0)) {
+				store.dispatch({
+					type: "SET_CURRENT_PLAYER",
+					payload: "0",
+				});
+
+				POS_0 = [];
+				store.dispatch({
+					type: "SET_IS_GAME_ENDED",
+					payload: true,
+				});
+			}
+		}
+		Appref.current.innerHTML = "";
+		Appref.current.append(`<AppLayout
+				field={${buttonClick.field ? buttonClick.field : field}}
+				currentPlayer={${currentPlayer}}
+				isGameEnded={${isGameEnded}}
+				isDraw={${isDraw}}
+				buttonClick={${buttonClick}}
+				onStart={${onStart}}
+			/>`);
+
+		/*return render(currentPlayer, isDraw, isGameEnded, field);*/
+	};
 
 	return (
-		<AppContext.Provider value={{ onChangeTitle, onDeleteTitle }}>
-			<div className="container mb-5">
-				<div className={styles.flexTitle}>
-					<button
-						className={("btn btn-secondary", styles.buttonSort)}
-						onClick={clickSort}
-					>
-						Сортировка
-					</button>
-					<input
-						className={styles.inputSearch}
-						placeholder="Введите данные для поиска"
-						value={searchValue}
-						onChange={(e) => setSearchValue(e.target.value)}
-					/>
-				</div>
-
-				<Form
-					value={caseValue}
-					inputChange={inputChange}
-					createItem={createItem}
-					formActive={formActive}
-				/>
-
-				{isLoading ? <Spinner /> : <List titles={titles} />}
-			</div>
-		</AppContext.Provider>
+		<div ref={Appref}>
+			{render(currentPlayer, isDraw, isGameEnded, field)}
+		</div>
 	);
 };
