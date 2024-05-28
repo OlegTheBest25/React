@@ -1,8 +1,7 @@
 import { AppLayout } from "./AppLayout.js";
-import React from "react";
-
-import { store } from "./store.js";
-import { useRef } from "react";
+import React, { useEffect } from "react";
+import store from "./store.js";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
 let POS_X = [];
 let POS_0 = [];
@@ -14,9 +13,24 @@ const win = (WIN_PATTERNS, currentPlayer) => {
 };
 
 export const App = () => {
+	const navigate = useNavigate();
 	const { currentPlayer, isDraw, isGameEnded, field, WIN_PATTERNS } =
 		store.getState();
-	const Appref = useRef(null);
+
+	useEffect(() => {
+		return () =>
+			store.subscribe(() => {
+				const {
+					currentPlayer,
+					isDraw,
+					isGameEnded,
+					field,
+					WIN_PATTERNS,
+				} = store.getState();
+				navigate("/");
+			});
+	});
+
 	const render = (currentPlayer, isDraw, isGameEnded, field) => {
 		return (
 			<AppLayout
@@ -42,7 +56,6 @@ export const App = () => {
 
 	const buttonClick = (index) => {
 		const { currentPlayer, isGameEnded, field } = store.getState();
-
 		if (isGameEnded) {
 			alert("Игра завершена. Начните игру сначала");
 			return;
@@ -96,22 +109,16 @@ export const App = () => {
 				});
 			}
 		}
-		Appref.current.innerHTML = "";
-		Appref.current.append(`<AppLayout
-				field={${buttonClick.field ? buttonClick.field : field}}
-				currentPlayer={${currentPlayer}}
-				isGameEnded={${isGameEnded}}
-				isDraw={${isDraw}}
-				buttonClick={${buttonClick}}
-				onStart={${onStart}}
-			/>`);
-
-		/*return render(currentPlayer, isDraw, isGameEnded, field);*/
 	};
 
 	return (
-		<div ref={Appref}>
-			{render(currentPlayer, isDraw, isGameEnded, field)}
+		<div>
+			<Routes>
+				<Route
+					path="/"
+					element={render(currentPlayer, isDraw, isGameEnded, field)}
+				/>
+			</Routes>
 		</div>
 	);
 };
