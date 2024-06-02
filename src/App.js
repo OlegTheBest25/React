@@ -1,124 +1,127 @@
-import { AppLayout } from "./AppLayout.js";
-import React, { useEffect } from "react";
-import store from "./store.js";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
-
-let POS_X = [];
-let POS_0 = [];
-
-const win = (WIN_PATTERNS, currentPlayer) => {
-	return WIN_PATTERNS.every((el) => {
-		return currentPlayer.includes(el);
-	});
-};
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import styles from "./style.module.css";
+import { List } from "./components/list/list";
+import { Form } from "./components/form/form";
+import { Spinner } from "./components/spinner/spinner";
+import {
+	selectCaseValue,
+	selectDatetime,
+	selectDebonucedValue,
+	selectFormActive,
+	selectIsLoading,
+	selectRefreshProductFlag,
+	selectSearchValue,
+	selectTitles,
+	selectTitlesCopy,
+} from "./selectors";
+import {
+	SET_CaseValue,
+	SET_FormActive,
+	SET_IsLoading,
+	SET_SearchValue,
+	SET_Titles,
+	SET_RefreshProductsFlag,
+	setIsLoadDataAsync,
+} from "./actions.js";
+import {
+	useOnChangeTitle,
+	useOnDeleteTitle,
+	useOnCreateTitle,
+	useDebounce,
+} from "./hooks";
 
 export const App = () => {
-	const navigate = useNavigate();
-	const { currentPlayer, isDraw, isGameEnded, field, WIN_PATTERNS } =
-		store.getState();
+	const dispatch = useDispatch();
+	const titles = useSelector(selectTitles);
+	const isLoading = useSelector(selectIsLoading);
+	const searchValue = useSelector(selectSearchValue);
+	const titlesCopy = useSelector(selectTitlesCopy);
+	const refreshProductFlag = useSelector(selectRefreshProductFlag);
+	const datetime = useSelector(selectDatetime);
+	const caseValue = useSelector(selectCaseValue);
+
+	const debounceSearchValue = useDebounce(searchValue, 1000);
+
+	const refreshProduct = () => {
+		dispatch(SET_RefreshProductsFlag(!refreshProductFlag));
+	};
+
+	const inputChange = ({ target }) => {
+		target.value === ""
+			? dispatch(SET_FormActive(true))
+			: dispatch(SET_FormActive(false));
+		dispatch(SET_CaseValue(target.value));
+	};
+
+	function getSortPosts(dir = true) {
+		return titlesCopy.sort(function (titleA, titleB) {
+			if (
+				!dir === false
+					? titleA.title < titleB.title
+					: titleA.title > titleB.title
+			)
+				return -1;
+		});
+	}
+
+	const clickSort = () => {
+		dispatch(SET_Titles(getSortPosts()));
+	};
 
 	useEffect(() => {
-		return () =>
-			store.subscribe(() => {
-				const {
-					currentPlayer,
-					isDraw,
-					isGameEnded,
-					field,
-					WIN_PATTERNS,
-				} = store.getState();
-				navigate("/");
-			});
-	});
-
-	const render = (currentPlayer, isDraw, isGameEnded, field) => {
-		return (
-			<AppLayout
-				field={buttonClick.field ? buttonClick.field : field}
-				currentPlayer={currentPlayer}
-				isGameEnded={isGameEnded}
-				isDraw={isDraw}
-				buttonClick={buttonClick}
-				onStart={onStart}
-			/>
-		);
-	};
-	const onStart = () => {
-		store.dispatch({
-			type: "SET_FIELD",
-			payload: ["", "", "", "", "", "", "", "", ""],
-		});
-		store.dispatch({ type: "SET_IS_GAME_ENDED", payload: false });
-		store.dispatch({ type: "SET_IS_DRAW", payload: false });
-		POS_X = []; //Помещаем в массив ходы игрока Х
-		POS_0 = []; //Помещаем в массив ходы игрока 0
-	};
-
-	const buttonClick = (index) => {
-		const { currentPlayer, isGameEnded, field } = store.getState();
-		if (isGameEnded) {
-			alert("Игра завершена. Начните игру сначала");
-			return;
-		}
-
-		let currentField = [...field];
-		if (currentField[index] === "") {
-			currentPlayer === "x" ? POS_X.push(index) : POS_0.push(index);
-			if (POS_X.length + POS_0.length === 9) {
-				store.dispatch({ type: "SET_IS_DRAW", payload: true });
-			}
-			currentPlayer === "x"
-				? store.dispatch({
-						type: "SET_CURRENT_PLAYER",
-						payload: "0",
-				  })
-				: store.dispatch({
-						type: "SET_CURRENT_PLAYER",
-						payload: "x",
-				  });
-			currentField[index] = currentPlayer;
-			store.dispatch({ type: "SET_FIELD", payload: currentField });
+		if (debounceSearchValue) {
+			let currentArr = titlesCopy.filter(
+				(title) => title.title.indexOf(searchValue) > -1
+			);
+			dispatch(SET_Titles(currentArr));
 		} else {
-			alert("Выберите пустую клетку");
+			dispatch(SET_Titles(titlesCopy));
 		}
-		// Проверка на достижение победного результата
-		for (let i = 0; i < WIN_PATTERNS.length; i++) {
-			if (win(WIN_PATTERNS[i], POS_X)) {
-				store.dispatch({
-					type: "SET_CURRENT_PLAYER",
-					payload: "x",
-				});
+	}, [debounceSearchValue]);
 
-				POS_X = [];
-				store.dispatch({
-					type: "SET_IS_GAME_ENDED",
-					payload: true,
-				});
-			}
+	useEffect(() => {
+		dispatch(SET_IsLoading(true));
+		dispatch(setIsLoadDataAsync);
+	}, [refreshProductFlag]);
 
-			if (win(WIN_PATTERNS[i], POS_0)) {
-				store.dispatch({
-					type: "SET_CURRENT_PLAYER",
-					payload: "0",
-				});
-
-				POS_0 = [];
-				store.dispatch({
-					type: "SET_IS_GAME_ENDED",
-					payload: true,
-				});
-			}
-		}
-	};
-
+	const onChangeTitle = useOnChangeTitle();
+	const onDeleteTitle = useOnDeleteTitle();
+	const { createItem, formActive } = useOnCreateTitle();
+	console.log(formActive);
 	return (
-		<div>
-			<Routes>
-				<Route
-					path="/"
-					element={render(currentPlayer, isDraw, isGameEnded, field)}
+		<div className="container mb-5">
+			<div className={styles.flexTitle}>
+				<button
+					className={("btn btn-secondary", styles.buttonSort)}
+					onClick={clickSort}
+				>
+					Сортировка
+				</button>
+				<input
+					className={styles.inputSearch}
+					placeholder="Введите данные для поиска"
+					value={searchValue}
+					onChange={(e) => dispatch(SET_SearchValue(e.target.value))}
 				/>
-			</Routes>
+			</div>
+
+			<Form
+				value={caseValue}
+				inputChange={inputChange}
+				createItem={createItem}
+				formActive={formActive}
+			/>
+
+			{isLoading ? (
+				<Spinner />
+			) : (
+				<List
+					titles={titles}
+					onChangeTitle={onChangeTitle}
+					onDeleteTitle={onDeleteTitle}
+				/>
+			)}
 		</div>
 	);
 };
