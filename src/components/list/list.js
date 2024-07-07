@@ -1,18 +1,13 @@
 import { Title } from "../item/item";
 import styles from "./list.module.css";
-export const List = ({ titles, onChangeTitle, onDeleteTitle }) => {
+export const List = ({ employees, onClick }) => {
 	return (
-		<ul>
-			{titles.map((title, index) => {
+		<div className={styles.wrap}>
+			{employees.map((employee, index) => {
 				return (
-					<Title
-						key={title.id}
-						title={title}
-						onChangeTitle={onChangeTitle}
-						onDeleteTitle={onDeleteTitle}
-					/>
+					<Title key={index} employee={employee} onClick={onClick} />
 				);
 			})}
-		</ul>
+		</div>
 	);
 };
