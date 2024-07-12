@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import styles from "./item.module.css";
 export const Title = ({ employee, onClick }) => {
 	return (
@@ -48,26 +47,5 @@ export const Title = ({ employee, onClick }) => {
 				</div>
 			</div>
 		</>
-=======
-export const Title = ({ title, onChangeTitle, onDeleteTitle }) => {
-	return (
-		<li className="list-group-item list-group-item-info d-flex justify-content-between align-items-center">
-			{title.title}
-			<div className="btn-group btn-group-sm">
-				<button
-					className="btn btn-secondary"
-					onClick={() => onChangeTitle(title.id)}
-				>
-					Изменить дело
-				</button>
-				<button
-					className="btn btn-danger"
-					onClick={() => onDeleteTitle(title.id)}
-				>
-					Удалить дело
-				</button>
-			</div>
-		</li>
->>>>>>> 37342afbf58ce0e61c341e43f8c3a0248de125cc
 	);
 };
