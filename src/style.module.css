@@ -2,6 +2,7 @@ body {
 	padding-top: 25px;
 }
 
+<<<<<<< HEAD
 .containerApp {
 	max-width: 1120px;
 	margin: 0 auto;
@@ -81,4 +82,24 @@ body {
 	font-size: 16px;
 	color: #8189a3;
 	margin-bottom: 40px;
+=======
+.item {
+	text-align: center;
+	color: blue;
+}
+
+.flexTitle {
+	display: flex;
+	justify-content: space-between;
+}
+.inputSearch {
+	margin: 10px;
+	width: 25%;
+}
+
+.buttonSort {
+	margin: 10px;
+	border-radius: 5px;
+	border: 0.5px solid grey;
+>>>>>>> 37342afbf58ce0e61c341e43f8c3a0248de125cc
 }
